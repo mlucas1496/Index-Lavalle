@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Silicon Oracle VWAP Methodology White Paper .4</title>
+<style>
+  :root{
+    --bg:#f2efe7;
+    --paper:#fbfaf6;
+    --ink:#101010;
+    --muted:#5f5b53;
+    --faint:#d8d2c5;
+    --line:#151515;
+    --soft:#ebe5d8;
+    --soft2:#f6f2e9;
+    --green:#1f5a45;
+    --blue:#213f66;
+    --amber:#7a4d0f;
+    --red:#762020;
+    --purple:#49325f;
+    --mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;
+    --sans:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:var(--sans);
+    font-size:16px;
+    line-height:1.45;
+  }
+  .page{
+    width:min(1180px, calc(100% - 42px));
+    margin:0 auto;
+    background:var(--paper);
+    border-left:1px solid var(--line);
+    border-right:1px solid var(--line);
+  }
+  .nav{
+    position:sticky;
+    top:0;
+    z-index:20;
+    background:rgba(251,250,246,.94);
+    backdrop-filter:blur(12px);
+    border-bottom:1px solid var(--line);
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:18px 24px;
+    font-family:var(--mono);
+    font-size:12px;
+    letter-spacing:.02em;
+  }
+  .brand{display:flex;align-items:center;gap:12px;text-transform:uppercase;font-weight:700}
+  .mark{
+    width:28px;height:28px;
+    background:var(--ink);
+    color:var(--paper);
+    display:grid;
+    place-items:center;
+    font-size:11px;
+    border:1px solid var(--line);
+  }
+  .links{display:flex;gap:18px;color:var(--muted)}
+  .links a{color:inherit;text-decoration:none}
+
+  .hero{
+    min-height:86vh;
+    display:grid;
+    grid-template-rows:1fr auto;
+    border-bottom:1px solid var(--line);
+  }
+  .hero-main{
+    display:grid;
+    grid-template-columns:1.05fr .95fr;
+    gap:48px;
+    align-items:end;
+    padding:70px 24px 48px;
+  }
+  .eyebrow{
+    font-family:var(--mono);
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    color:var(--muted);
+    margin-bottom:22px;
+  }
+  h1{
+    margin:0;
+    font-size:clamp(52px, 8.2vw, 112px);
+    line-height:.84;
+    letter-spacing:-.08em;
+    font-weight:850;
+  }
+  .hero-copy{
+    border-top:1px solid var(--line);
+    padding-top:20px;
+    color:var(--muted);
+    font-size:19px;
+    max-width:500px;
+  }
+  .hero-copy b{color:var(--ink)}
+  .version-card{
+    border:1px solid var(--line);
+    background:var(--soft);
+    padding:20px;
+    align-self:start;
+  }
+  .version-card .label{
+    font-family:var(--mono);
+    color:var(--muted);
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    font-size:12px;
+  }
+  .version-card .big{
+    font-family:var(--mono);
+    font-size:34px;
+    letter-spacing:-.04em;
+    margin:18px 0 8px;
+  }
+  .version-card .small{
+    color:var(--muted);
+    font-size:14px;
+  }
+  .principles{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    border-top:1px solid var(--line);
+  }
+  .principle{
+    min-height:160px;
+    padding:18px 16px;
+    border-right:1px solid var(--line);
+  }
+  .principle:last-child{border-right:0}
+  .principle .num{
+    font-family:var(--mono);
+    font-size:11px;
+    color:var(--muted);
+    margin-bottom:26px;
+  }
+  .principle b{display:block;font-size:15px;margin-bottom:9px}
+  .principle span{display:block;color:var(--muted);font-size:13px}
+
+  section{
+    padding:54px 24px;
+    border-bottom:1px solid var(--line);
+  }
+  .section-head{
+    display:grid;
+    grid-template-columns:260px 1fr;
+    gap:42px;
+    margin-bottom:30px;
+  }
+  .section-num{
+    font-family:var(--mono);
+    font-size:12px;
+    color:var(--muted);
+    text-transform:uppercase;
+    letter-spacing:.08em;
+  }
+  h2{
+    margin:0;
+    font-size:clamp(32px,4.2vw,58px);
+    line-height:.94;
+    letter-spacing:-.058em;
+    max-width:820px;
+  }
+  .body-copy{
+    max-width:880px;
+    color:var(--muted);
+    font-size:18px;
+  }
+  .body-copy b{color:var(--ink)}
+
+  .grid2{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line)}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--line)}
+  .grid4{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--line)}
+  .cell{
+    padding:20px;
+    border-right:1px solid var(--line);
+    min-height:210px;
+    background:var(--paper);
+  }
+  .cell:last-child{border-right:0}
+  .cell h3{
+    margin:0 0 16px;
+    font-size:22px;
+    line-height:1;
+    letter-spacing:-.04em;
+  }
+  .cell p{
+    margin:0;
+    color:var(--muted);
+    font-size:14px;
+  }
+  .ticker{
+    font-family:var(--mono);
+    font-size:12px;
+    color:var(--muted);
+    text-transform:uppercase;
+    margin-bottom:36px;
+  }
+  .metric{
+    font-family:var(--mono);
+    font-size:32px;
+    margin-bottom:8px;
+    letter-spacing:-.04em;
+  }
+  .weight{
+    margin-top:22px;
+    padding-top:12px;
+    border-top:1px solid var(--faint);
+    font-family:var(--mono);
+    color:var(--muted);
+    font-size:12px;
+  }
+
+  .formula-box{
+    border:1px solid var(--line);
+    background:var(--soft);
+    padding:22px;
+  }
+  .formula-title{
+    font-family:var(--mono);
+    text-transform:uppercase;
+    color:var(--muted);
+    letter-spacing:.08em;
+    font-size:12px;
+    margin-bottom:18px;
+  }
+  pre{
+    margin:0;
+    font-family:var(--mono);
+    font-size:13px;
+    line-height:1.75;
+    white-space:pre-wrap;
+  }
+
+  .table-wrap{border:1px solid var(--line);overflow:auto}
+  table{
+    width:100%;
+    border-collapse:collapse;
+    background:var(--paper);
+  }
+  th{
+    text-align:left;
+    font-family:var(--mono);
+    font-size:11px;
+    color:var(--muted);
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    padding:12px;
+    border-bottom:1px solid var(--line);
+  }
+  td{
+    padding:13px 12px;
+    border-bottom:1px solid var(--faint);
+    vertical-align:top;
+    font-size:14px;
+  }
+  tr:last-child td{border-bottom:0}
+  td.mono{font-family:var(--mono);font-size:13px}
+  .status{
+    display:inline-block;
+    border:1px solid var(--line);
+    padding:3px 7px;
+    font-family:var(--mono);
+    text-transform:uppercase;
+    font-size:11px;
+    white-space:nowrap;
+  }
+  .good{background:#dfe8df;color:var(--green)}
+  .warn{background:#eee1c8;color:var(--amber)}
+  .bad{background:#ead9d7;color:var(--red)}
+  .info{background:#dce3ee;color:var(--blue)}
+  .purple{background:#e2dbe9;color:var(--purple)}
+
+  .calc{
+    border:1px solid var(--line);
+    display:grid;
+    grid-template-columns:1fr 1fr;
+  }
+  .calc-panel{
+    padding:22px;
+    border-right:1px solid var(--line);
+    background:var(--paper);
+  }
+  .calc-panel:last-child{border-right:0}
+  .calc-panel h3{
+    margin:0 0 22px;
+    font-size:24px;
+    letter-spacing:-.04em;
+  }
+  .row{
+    display:grid;
+    grid-template-columns:1fr auto;
+    gap:18px;
+    padding:12px 0;
+    border-bottom:1px solid var(--faint);
+    font-family:var(--mono);
+    font-size:13px;
+  }
+  .row span{color:var(--muted)}
+  .row:last-child{border-bottom:0}
+  .final{
+    margin-top:18px;
+    border:1px solid var(--line);
+    background:var(--soft);
+    padding:16px;
+    display:flex;
+    justify-content:space-between;
+    gap:18px;
+    font-family:var(--mono);
+  }
+
+  .pipeline{
+    display:grid;
+    grid-template-columns:repeat(6,1fr);
+    border:1px solid var(--line);
+  }
+  .step{
+    min-height:210px;
+    padding:16px;
+    border-right:1px solid var(--line);
+    position:relative;
+  }
+  .step:last-child{border-right:0}
+  .step:after{
+    content:"→";
+    position:absolute;
+    right:-10px;
+    top:50%;
+    background:var(--paper);
+    color:var(--muted);
+    font-family:var(--mono);
+  }
+  .step:last-child:after{display:none}
+  .step .n{
+    font-family:var(--mono);
+    color:var(--muted);
+    font-size:12px;
+    margin-bottom:30px;
+  }
+  .step b{
+    display:block;
+    font-size:18px;
+    line-height:1.05;
+    letter-spacing:-.03em;
+    margin-bottom:10px;
+  }
+  .step p{
+    margin:0;
+    color:var(--muted);
+    font-size:13px;
+  }
+
+  .chart-card{
+    border:1px solid var(--line);
+    background:var(--paper);
+  }
+  .chart-head{
+    padding:16px 18px;
+    border-bottom:1px solid var(--line);
+    display:flex;
+    justify-content:space-between;
+    gap:16px;
+    font-family:var(--mono);
+    color:var(--muted);
+    font-size:12px;
+  }
+  .legend{display:flex;gap:16px;flex-wrap:wrap}
+  .legend i{display:inline-block;width:18px;height:2px;margin-right:6px;vertical-align:middle}
+  .chart{
+    height:360px;
+    position:relative;
+    background:
+      linear-gradient(to right,rgba(0,0,0,.08) 1px,transparent 1px),
+      linear-gradient(to bottom,rgba(0,0,0,.08) 1px,transparent 1px);
+    background-size:96px 60px;
+    overflow:hidden;
+  }
+  svg{position:absolute;inset:0;width:100%;height:100%}
+  .axis{
+    position:absolute;
+    font-family:var(--mono);
+    font-size:11px;
+    color:var(--muted);
+  }
+  .axis.top{left:14px;top:14px}
+  .axis.bottom{left:14px;bottom:14px}
+  .axis.right{right:14px;bottom:14px}
+
+  .callout{
+    border:1px solid var(--line);
+    background:var(--soft);
+    padding:26px;
+  }
+  .callout p{
+    margin:0;
+    font-size:28px;
+    line-height:1.12;
+    letter-spacing:-.045em;
+  }
+  .callout small{
+    display:block;
+    margin-top:18px;
+    color:var(--muted);
+    font-size:14px;
+  }
+
+  .note{
+    border:1px solid var(--line);
+    background:var(--soft2);
+    padding:18px;
+    color:var(--muted);
+    font-size:15px;
+  }
+  .note b{color:var(--ink)}
+  .redline{
+    border-left:6px solid var(--red);
+    padding:18px 22px;
+    background:#ead9d7;
+  }
+  .greenline{
+    border-left:6px solid var(--green);
+    padding:18px 22px;
+    background:#dfe8df;
+  }
+
+  footer{
+    padding:22px 24px;
+    color:var(--muted);
+    font-family:var(--mono);
+    font-size:11px;
+    background:var(--paper);
+  }
+
+  @media(max-width:980px){
+    .page{width:calc(100% - 22px)}
+    .hero{min-height:auto}
+    .hero-main,.section-head,.grid2,.grid3,.grid4,.calc{grid-template-columns:1fr}
+    .principles,.pipeline{grid-template-columns:1fr}
+    .principle,.cell,.calc-panel,.step{border-right:0;border-bottom:1px solid var(--line)}
+    .principle:last-child,.cell:last-child,.calc-panel:last-child,.step:last-child{border-bottom:0}
+    .step:after{display:none}
+    .links{display:none}
+    h1{font-size:52px}
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <nav class="nav">
+    <div class="brand"><div class="mark">SO</div><span>Silicon Oracle</span></div>
+    <div class="links">
+      <a href="#thesis">Thesis</a>
+      <a href="#verified">Verified Hours</a>
+      <a href="#wash">Wash Leases</a>
+      <a href="#composite">Composite</a>
+      <a href="#publication">Publication</a>
+      <a href="#nextsteps">Next Steps</a>
+    </div>
+  </nav>
+
+  <header class="hero">
+    <div class="hero-main">
+      <div>
+        <div class="eyebrow">Proposed methodology · VWAP white paper</div>
+        <h1>Earn the benchmark before blending it.</h1>
+        <p class="hero-copy">
+          This proposal defines a defensible benchmark stack for H100 compute pricing. The core benchmark is <b>Completed Rental VWAP</b>, supported by independently measured uptime, bounded offer-quality weights, explicit carryforward limits, source-rights controls, and public methodology governance.
+        </p>
+      </div>
+      <aside class="version-card">
+        <div class="label">Proposed reference implementation</div>
+        <div class="big">SO-H100-DLV-v0.1</div>
+        <div class="small">H100 80GB · North America · on-demand · USD per verified GPU-hour · component series first</div>
+      </aside>
+    </div>
+
+    <div class="principles">
+      <div class="principle"><div class="num">01</div><b>Publish components first</b><span>Rental VWAP, Web2 Anchor, Offer Index, and DePIN Discount are the initial benchmark. Composite is experimental.</span></div>
+      <div class="principle"><div class="num">02</div><b>Gate verified GPU-hours</b><span>Verification should admit or reject records, not secretly scale volume.</span></div>
+      <div class="principle"><div class="num">03</div><b>Separate rental types</b><span>Spot, on-demand, bulk, reserved, and enterprise deals cannot be pooled blindly.</span></div>
+      <div class="principle"><div class="num">04</div><b>Defend against wash leases</b><span>Fake completed rentals are the scarier attack than fake offers.</span></div>
+    </div>
+  </header>
+
+  <main>
+    <section id="thesis">
+      <div class="section-head">
+        <div class="section-num">01 · Revised thesis</div>
+        <h2>The composite is not the first product. The component benchmark stack is.</h2>
+      </div>
+      <p class="body-copy">
+        A blended price is only useful after its ingredients are trusted. v0.1 should publish the component series
+        with quality metadata and leave the composite marked as experimental. This keeps the product honest in thin markets:
+        users can see whether the signal comes from completed rentals, Web2 anchors, or offers.
+      </p>
+    </section>
+
+    <section>
+      <div class="section-head">
+        <div class="section-num">02 · v0.1 index family</div>
+        <h2>Four instruments before one composite.</h2>
+      </div>
+      <div class="grid4">
+        <div class="cell">
+          <div class="ticker">SO-H100-DLV</div>
+          <div class="metric">$2.85/hr</div>
+          <h3>DePIN Lease VWAP</h3>
+          <p>Completed rentals only. Weighted by verified GPU-hours. This is the truth layer.</p>
+          <div class="weight">headline index</div>
+        </div>
+        <div class="cell">
+          <div class="ticker">SO-H100-W2A</div>
+          <div class="metric">$4.20/hr</div>
+          <h3>Web2 Cloud Anchor</h3>
+          <p>Traditional cloud and neocloud baseline. Useful context, not transaction VWAP.</p>
+          <div class="weight">component series</div>
+        </div>
+        <div class="cell">
+          <div class="ticker">SO-H100-VOI</div>
+          <div class="metric">$2.50/hr</div>
+          <h3>Verified Offer Index</h3>
+          <p>Filtered supply-side offers. Never used as completed rental volume.</p>
+          <div class="weight">component series</div>
+        </div>
+        <div class="cell">
+          <div class="ticker">SO-H100-DDS</div>
+          <div class="metric">32.1%</div>
+          <h3>DePIN Discount Spread</h3>
+          <p>The go-to-market metric: verified DePIN rentals versus the Web2 anchor.</p>
+          <div class="weight">go-to-market wedge</div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head">
+        <div class="section-num">03 · Minimum viable benchmark</div>
+        <h2>Define the bucket narrowly enough to defend it.</h2>
+      </div>
+      <div class="formula-box">
+        <div class="formula-title">SO-H100-DLV-v0.1 bucket definition</div>
+<pre>chip_model:          NVIDIA H100
+memory:              80GB
+topology:            explicit field: SXM | PCIe | unknown
+region:              North America, with sub-region metadata
+market_type:         on-demand / short-term rental
+excluded_types:      bulk contract, reserved term, enterprise commitment
+unit:                USD per verified GPU-hour
+publication_status:  dashboard/API only
+settlement_ready:    false by default</pre>
+      </div>
+      <div style="height:18px"></div>
+      <div class="note">
+        <b>Why this specified:</b> a single large discounted bulk deal can overwhelm 50 smaller rentals in a naive VWAP.
+        Rental type stratification prevents a batch enterprise discount from masquerading as spot/on-demand market clearing price.
+      </div>
+    </section>
+
+    <section id="verified">
+      <div class="section-head">
+        <div class="section-num">04 · Verification layer</div>
+        <h2>“Verified GPU-hours” must be admitted by rule, not adjusted by discretion.</h2>
+      </div>
+      <p class="body-copy">
+        This methodology uses verification tiers as a binary admission gate: a rental either satisfies the minimum proof threshold
+        and enters VWAP at its raw verified GPU-hours, or it is excluded and logged.
+      </p>
+      <div style="height:24px"></div>
+      <div class="grid4">
+        <div class="cell">
+          <div class="ticker">Level 1</div>
+          <h3>Economic proof</h3>
+          <p>Lease exists, payment settled, duration observable. Useful, but insufficient alone for settlement-grade pricing.</p>
+          <div class="weight">admitted only for research mode</div>
+        </div>
+        <div class="cell">
+          <div class="ticker">Level 2</div>
+          <h3>Telemetry proof</h3>
+          <p>Provider telemetry confirms uptime, job lifecycle, GPU allocation, and basic utilization signals.</p>
+          <div class="weight">minimum v0.1 admission target</div>
+        </div>
+        <div class="cell">
+          <div class="ticker">Level 3</div>
+          <h3>Hardware attestation</h3>
+          <p>Cryptographic or trusted hardware evidence confirms that the claimed GPU class served the rental.</p>
+          <div class="weight">institutional target</div>
+        </div>
+        <div class="cell">
+          <div class="ticker">Level 4</div>
+          <h3>Buyer confirmation</h3>
+          <p>Customer-side completion evidence, workload output, or buyer-side verification confirms usable delivery.</p>
+          <div class="weight">highest confidence</div>
+        </div>
+      </div>
+      <div style="height:18px"></div>
+      <div class="formula-box">
+        <div class="formula-title">Verified GPU-hours admission rule</div>
+<pre>usable_hours_i =
+  observed_rental_duration_i × uptime_ratio_i
+
+verification_tier_i =
+  max_proof_level_satisfied_by_record_i
+
+admission_rule:
+  if verification_tier_i >= minimum_required_tier:
+      verified_gpu_hours_i = gpu_count_i × usable_hours_i
+  else:
+      exclude rental and publish exclusion_reason
+
+no hidden multiplier:
+  verification changes admission status, not volume weight</pre>
+      </div>
+      <div style="height:18px"></div>
+      <div class="redline">
+        <b>Uptime measurement standard:</b> uptime_ratio_i must come from independently observable telemetry,
+        third-party monitoring, customer-side job evidence, or cryptographic/hardware attestation. Provider self-reported
+        uptime alone is not sufficient for production VWAP admission.
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head">
+        <div class="section-num">05 · True VWAP</div>
+        <h2>Completed Rental VWAP is total verified spend divided by total verified GPU-hours.</h2>
+      </div>
+      <div class="formula-box">
+        <div class="formula-title">Completed Rental VWAP</div>
+<pre>for each admitted completed rental i:
+
+price_i =
+  total_paid_usd_i / verified_gpu_hours_i
+
+volume_i =
+  verified_gpu_hours_i
+
+completed_rental_vwap =
+  Σ(price_i × volume_i) / Σ(volume_i)
+
+equivalent:
+  completed_rental_vwap =
+  Σ(total_paid_usd_i) / Σ(verified_gpu_hours_i)</pre>
+      </div>
+      <div style="height:18px"></div>
+      <div class="redline">
+        <b>Thin-market caveat:</b> if a small number of admitted rentals dominate the denominator, the published value may be mathematically correct but economically misleading. The index must publish concentration, rental type mix, staleness, and settlement readiness.
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head">
+        <div class="section-num">06 · Thin-market controls</div>
+        <h2>Do not let one large deal define the market.</h2>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Control</th><th>Rule</th><th>Why it matters</th></tr></thead>
+          <tbody>
+            <tr><td><span class="status info">Rental type stratification</span></td><td>Calculate spot, on-demand, bulk, reserved, and enterprise slices separately.</td><td>Prevents negotiated discounts from poisoning the on-demand index.</td></tr>
+            <tr><td><span class="status info">Minimum count</span></td><td>Require minimum completed rentals and minimum unique providers before settlement readiness.</td><td>Stops thin, decorative price prints from becoming benchmarks.</td></tr>
+            <tr><td><span class="status info">Concentration cap</span></td><td>No provider, buyer, or buyer-provider pair can exceed a defined share of volume.</td><td>Limits dominance by one actor or one strategic deal.</td></tr>
+            <tr><td><span class="status info">Price dispersion flag</span></td><td>Publish median, interquartile range, and dispersion alongside VWAP.</td><td>Shows when the market is fractured rather than liquid.</td></tr>
+            <tr><td><span class="status info">Carryforward rule</span></td><td>If no valid rentals occur, carry prior value for max 4 hours. Flag after 60 minutes. Publish null after max age.</td><td>Prevents false precision during dead windows.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="wash">
+      <div class="section-head">
+        <div class="section-num">07 · Manipulation model</div>
+        <h2>Wash leases are more dangerous than fake offers.</h2>
+      </div>
+      <p class="body-copy">
+        Fake offers can be excluded from VWAP. Fake completed rentals are harder: an attacker can control both buyer and provider,
+        create low-priced transactions, and attempt to move the completed-rental index.
+      </p>
+      <div style="height:24px"></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Attack</th><th>Defense</th><th>Publication field</th></tr></thead>
+          <tbody>
+            <tr><td>Buyer and provider controlled by same actor</td><td>Address clustering, KYB where available, entity graph analysis</td><td class="mono">counterparty_distinctness_score</td></tr>
+            <tr><td>One pair contributes most volume</td><td>Buyer-provider pair cap in rolling window</td><td class="mono">top_pair_volume_share</td></tr>
+            <tr><td>Very short synthetic rentals</td><td>Minimum duration and minimum useful job criteria</td><td class="mono">median_rental_duration</td></tr>
+            <tr><td>Below-market wash prints</td><td>Price-to-market screen versus offer index and historical rental band</td><td class="mono">price_band_exclusion_count</td></tr>
+            <tr><td>Sybil provider network</td><td>Provider reputation, completed history, hardware verification, network caps</td><td class="mono">provider_concentration</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head">
+        <div class="section-num">08 · Offer Index</div>
+        <h2>Offers are useful, but only as a separate supply instrument.</h2>
+      </div>
+      <div class="formula-box">
+        <div class="formula-title">Verified Offer Index</div>
+<pre>filter stage:
+  reject if below sanity floor
+  reject if stale
+  reject if telemetry fails
+  reject if provider in quarantine
+  reject if source cap exceeded
+
+quality score:
+  raw_quality_score_i =
+    0.40 × independent_uptime_score_i
+  + 0.30 × hardware_verification_score_i
+  + 0.20 × provider_reputation_score_i
+  + 0.10 × freshness_score_i
+
+bounded_quality_score_i =
+  clamp(raw_quality_score_i, 0.10, 1.00)
+
+weighting stage:
+  included_offer_weight_i =
+    available_gpu_hours_i × bounded_quality_score_i
+
+verified_offer_index =
+  weighted_median(offer_price_i, included_offer_weight_i)</pre>
+      </div>
+      <div style="height:18px"></div>
+      <div class="note">
+        <b>Design principle:</b> avoid a pure multiplicative chain where one low factor collapses weight to zero.
+        Use hard filters first, then bounded weights for included offers. The 0.10 floor preserves new-entrant diversity
+        among offers that already passed the admission filters, while obvious manipulation is still rejected before weighting.
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head">
+        <div class="section-num">09 · Web2 Anchor</div>
+        <h2>Web2 anchors context. It should not suppress the DePIN signal.</h2>
+      </div>
+      <div class="grid2">
+        <div class="cell">
+          <h3>Use</h3>
+          <p>Web2 cloud and neocloud pricing provides a stable comparison baseline and enables the DePIN Discount Spread.</p>
+        </div>
+        <div class="cell">
+          <h3>Limit</h3>
+          <p>Public list prices are slow-moving, may omit private discounts, and do not represent transaction-weighted market clearing prices.</p>
+        </div>
+      </div>
+      <div style="height:18px"></div>
+      <div class="formula-box">
+        <div class="formula-title">DePIN Discount Spread</div>
+<pre>depin_discount_spread =
+  1 - (completed_rental_vwap / web2_cloud_anchor)
+
+example:
+  1 - (2.85 / 4.20) = 32.1%</pre>
+      </div>
+    </section>
+
+    <section id="composite">
+      <div class="section-head">
+        <div class="section-num">10 · Composite policy</div>
+        <h2>Composite is experimental until the component series have history.</h2>
+      </div>
+
+      <div class="redline">
+        <b>Proposed policy:</b> publish the component series as the product. Show the composite only as an experimental dashboard field.
+        Do not use it for settlement, liquidations, NAV, or perps until the component data has been backtested.
+      </div>
+
+      <div style="height:24px"></div>
+      <div class="calc">
+        <div class="calc-panel">
+          <h3>Illustrative composite only</h3>
+          <div class="row"><span>Completed Rental VWAP × 45%</span><b>$2.85 × 0.45 = $1.2825</b></div>
+          <div class="row"><span>Web2 Cloud Anchor × 40%</span><b>$4.20 × 0.40 = $1.6800</b></div>
+          <div class="row"><span>Verified Offer Index × 15%</span><b>$2.50 × 0.15 = $0.3750</b></div>
+          <div class="final"><span>Experimental composite</span><b>$3.3375 ≈ $3.34/hr</b></div>
+        </div>
+        <div class="calc-panel">
+          <h3>Production weighting rule</h3>
+          <div class="row"><span>Base weight</span><b>methodology-defined</b></div>
+          <div class="row"><span>Liquidity score</span><b>completed GPU-hours</b></div>
+          <div class="row"><span>Quality score</span><b>verification + concentration</b></div>
+          <div class="row"><span>Rights score</span><b>redistribution confidence</b></div>
+          <div class="final"><span>Adjusted weight</span><b>base × liquidity × quality × rights</b></div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head">
+        <div class="section-num">11 · Settlement readiness</div>
+        <h2>Settlement-ready must be a status, not a vibe.</h2>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Requirement</th><th>Example threshold</th><th>Status field</th></tr></thead>
+          <tbody>
+            <tr><td>Completed rental volume</td><td>Minimum verified GPU-hours in trailing 24h window</td><td class="mono">completed_gpu_hours_24h</td></tr>
+            <tr><td>Provider diversity</td><td>Minimum unique providers; top provider below configured cap</td><td class="mono">provider_count / top_provider_share</td></tr>
+            <tr><td>Counterparty diversity</td><td>Top buyer-provider pair below configured cap</td><td class="mono">top_pair_volume_share</td></tr>
+            <tr><td>Freshness</td><td>Warning after 60 minutes; max carryforward 4 hours; null after expiry</td><td class="mono">staleness_minutes / status_code</td></tr>
+            <tr><td>Exclusion rate</td><td>Outlier, wash, and suspicious-record rate below threshold</td><td class="mono">exclusion_rate</td></tr>
+            <tr><td>Data rights</td><td>Commercial publication requires licensed, public-chain, or otherwise cleared source rights</td><td class="mono">rights_status</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head">
+        <div class="section-num">12 · Governance</div>
+        <h2>Methodology changes need a public process.</h2>
+      </div>
+      <p class="body-copy">
+        Even before formal benchmark regulation applies, Silicon Oracle should act like a benchmark administrator:
+        methodology changes are versioned, announced, logged, and never silently retrofitted into historical prices.
+      </p>
+      <div style="height:24px"></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Governance control</th><th>Policy</th><th>Why it matters</th></tr></thead>
+          <tbody>
+            <tr><td><span class="status info">Versioning</span></td><td>Every formula, threshold, source rule, and exclusion rule belongs to a methodology version.</td><td>Users know which rules produced each price.</td></tr>
+            <tr><td><span class="status info">Change notice</span></td><td>Material methodology changes require at least 14 days public notice before activation.</td><td>Protocols and funds can evaluate impact before relying on the feed.</td></tr>
+            <tr><td><span class="status info">Emergency policy</span></td><td>Emergency changes may activate immediately only to protect benchmark integrity, with immediate disclosure, rationale, and post-hoc review.</td><td>Prevents silent discretionary benchmark changes.</td></tr>
+            <tr><td><span class="status info">Restatement policy</span></td><td>Historical values are restated only under documented criteria, with prior and new values preserved.</td><td>Creates predictable behavior when bad data is discovered later.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head">
+        <div class="section-num">13 · Data rights</div>
+        <h2>Source rights are part of benchmark quality.</h2>
+      </div>
+      <div class="redline">
+        <b>Commercial publication rule:</b> Silicon Oracle should obtain formal data licensing agreements with source marketplaces
+        before commercial redistribution of off-chain marketplace data. Public on-chain records may be cleaner, but every source still receives a rights status.
+      </div>
+      <div style="height:24px"></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Rights status</th><th>Meaning</th><th>Index use</th></tr></thead>
+          <tbody>
+            <tr><td><span class="status good">public_chain</span></td><td>Public blockchain data with clear provenance and reproducible extraction.</td><td>Eligible for component publication, subject to methodology filters.</td></tr>
+            <tr><td><span class="status good">licensed</span></td><td>Formal source agreement permits aggregation and redistribution.</td><td>Eligible for commercial publication.</td></tr>
+            <tr><td><span class="status warn">public_reference</span></td><td>Public pricing or benchmark data useful for comparison but not necessarily redistributable as an input.</td><td>Reference or anchor only, subject to terms.</td></tr>
+            <tr><td><span class="status bad">restricted</span></td><td>Scraped, proprietary, or unclear rights.</td><td>Exclude from commercial benchmark publication.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head">
+        <div class="section-num">14 · Component visibility</div>
+        <h2>Users should see the lines behind the number.</h2>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-head">
+          <span>SO-H100 component series · illustrative</span>
+          <div class="legend">
+            <span><i style="background:var(--amber)"></i>Web2 Anchor</span>
+            <span><i style="background:var(--blue)"></i>Rental VWAP</span>
+            <span><i style="background:#5b3b83"></i>Offer Index</span>
+            <span><i style="background:var(--green)"></i>Experimental Composite</span>
+          </div>
+        </div>
+        <div class="chart">
+          <svg viewBox="0 0 1000 360" preserveAspectRatio="none">
+            <polyline points="0,90 100,94 200,86 300,91 400,84 500,88 600,87 700,83 800,88 900,85 1000,86" fill="none" stroke="#7a4d0f" stroke-width="4"/>
+            <polyline points="0,202 100,197 200,207 300,194 400,190 500,198 600,186 700,190 800,181 900,185 1000,178" fill="none" stroke="#213f66" stroke-width="4"/>
+            <polyline points="0,235 100,228 200,240 300,226 400,222 500,230 600,217 700,220 800,212 900,210 1000,213" fill="none" stroke="#5b3b83" stroke-width="3" stroke-dasharray="10 8"/>
+            <polyline points="0,148 100,146 200,150 300,143 400,139 500,144 600,137 700,139 800,133 900,134 1000,132" fill="none" stroke="#1f5a45" stroke-width="5"/>
+          </svg>
+          <div class="axis top">$4.50</div>
+          <div class="axis bottom">$2.25</div>
+          <div class="axis right">time →</div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head">
+        <div class="section-num">15 · Calculation pipeline</div>
+        <h2>The benchmark should be reproducible from audit records.</h2>
+      </div>
+      <div class="pipeline">
+        <div class="step"><div class="n">01</div><b>Ingest</b><p>Collect rentals, offers, anchors, and references.</p></div>
+        <div class="step"><div class="n">02</div><b>Normalize</b><p>Convert to USD per verified H100 GPU-hour.</p></div>
+        <div class="step"><div class="n">03</div><b>Classify</b><p>Rental, offer, anchor, reference-only, bulk, reserved.</p></div>
+        <div class="step"><div class="n">04</div><b>Verify</b><p>Assign verification tier and usable GPU-hours.</p></div>
+        <div class="step"><div class="n">05</div><b>Filter</b><p>Reject invalid, stale, wash, or manipulative records.</p></div>
+        <div class="step"><div class="n">06</div><b>Publish</b><p>Expose component prices, quality metadata, and exclusions.</p></div>
+      </div>
+    </section>
+
+    <section id="publication">
+      <div class="section-head">
+        <div class="section-num">16 · Publication schema</div>
+        <h2>The output should explain itself.</h2>
+      </div>
+      <div class="formula-box">
+        <div class="formula-title">Example API payload</div>
+<pre>{
+  "index_family": "SO-H100-v0.1",
+  "unit": "USD_PER_VERIFIED_GPU_HOUR",
+  "bucket": "H100_80GB_NA_ON_DEMAND",
+  "publication_status": "dashboard_api_only",
+  "settlement_ready": false,
+
+  "component_prices": {
+    "depin_completed_rental_vwap": 2.85,
+    "web2_cloud_anchor": 4.20,
+    "verified_offer_index": 2.50,
+    "depin_discount_spread": 0.321,
+    "experimental_composite": 3.34
+  },
+
+  "rental_vwap_quality": {
+    "completed_gpu_hours_24h": 12400,
+    "unique_providers": 18,
+    "top_provider_share": 0.22,
+    "top_buyer_provider_pair_share": 0.11,
+    "median_rental_duration_hours": 6.4,
+    "minimum_required_verification_tier": 2,
+    "staleness_minutes": 4,
+    "carryforward_status": "fresh",
+    "max_carryforward_minutes": 240,
+    "exclusion_rate": 0.18
+  },
+
+  "rights": {
+    "rights_status": "mixed",
+    "restricted_sources_excluded": true,
+    "commercial_publication_ready": false
+  },
+
+  "offer_quality_model": {
+    "score_range": [0.10, 1.00],
+    "inputs": {
+      "independent_uptime_score": 0.40,
+      "hardware_verification_score": 0.30,
+      "provider_reputation_score": 0.20,
+      "freshness_score": 0.10
+    }
+  },
+
+  "governance": {
+    "methodology_version": "0.3.1",
+    "change_policy": "14_day_notice_for_material_changes",
+    "emergency_policy": "immediate_disclosure_and_post_hoc_review",
+    "restatement_policy": "preserve_original_and_revised_values"
+  },
+
+  "warnings": [
+    "experimental_composite_not_for_settlement",
+    "web2_anchor_not_transaction_weighted",
+    "offer_index_not_vwap",
+    "commercial_publication_requires_source_rights"
+  ]
+}</pre>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head">
+        <div class="section-num">17 · Final position</div>
+        <h2>The credible product is the benchmark stack, not the blend.</h2>
+      </div>
+      <div class="callout">
+        <p>
+          Silicon Oracle should launch with component series: DePIN Lease VWAP, Web2 Cloud Anchor, Verified Offer Index,
+          and DePIN Discount Spread. The composite can exist as an experimental field, but the product earns trust by using
+          binary verification admission, independently measured uptime, explicit carryforward limits, wash-lease defenses,
+          rental-type stratification, bounded offer-quality weights, data-rights statuses, and public methodology governance.
+        </p>
+        <small>Concise call framing: The product should not ask users to trust a blended number first. It should show the data stack that would eventually justify one.</small>
+      </div>
+    </section>
+
+    <!-- ====================== NEW IN v0.4 ====================== -->
+    <section id="nextsteps">
+      <div class="section-head">
+        <div class="section-num">18 · Next steps</div>
+        <h2>From white paper to a daily-published benchmark.</h2>
+      </div>
+      <p class="body-copy">
+        All four component series are buildable today with rights-clean data. The <b>DePIN Lease VWAP</b> comes from public on-chain leases,
+        the <b>Web2 Cloud Anchor</b> from published cloud and neocloud list prices, the <b>Verified Offer Index</b> from filtered supply-side offers,
+        and the <b>DePIN Discount Spread</b> is derived from the two. The one input we cannot source yet — transaction-weighted Web2 <b>executed</b> prices —
+        is marked pending and built toward in Phase 2 via licensing, not scraping.
+      </p>
+      <div style="height:24px"></div>
+      <div class="grid4">
+        <div class="cell">
+          <div class="ticker">Step 01</div>
+          <h3>Pin one bucket</h3>
+          <p>H100 80GB · SXM · North America · on-demand · USD per GPU-hour. One defensible bucket beats a broad index you cannot defend.</p>
+          <div class="weight">scope</div>
+        </div>
+        <div class="cell">
+          <div class="ticker">Step 02</div>
+          <h3>Go wide on sources</h3>
+          <p>Breadth is what makes a benchmark trustworthy and hard to move. Many public rental sources, each with a rights status — not two scraped sites.</p>
+          <div class="weight">coverage</div>
+        </div>
+        <div class="cell">
+          <div class="ticker">Step 03</div>
+          <h3>Publish daily reference</h3>
+          <p>Normalize to the standard unit, robust outlier removal, then publish daily with <span class="mono">settlement_ready: false</span>. No relabeling, no synthetic multiplier.</p>
+          <div class="weight">ship</div>
+        </div>
+        <div class="cell">
+          <div class="ticker">Step 04</div>
+          <h3>Govern &amp; show your work</h3>
+          <p>Versioned methodology, daily quality and exclusion logs, independent calculation/validation. The track record is the product right now.</p>
+          <div class="weight">trust</div>
+        </div>
+      </div>
+      <div style="height:18px"></div>
+      <div class="grid2">
+        <div class="cell" style="min-height:auto">
+          <div class="ticker">SO-H100-XLV · pending</div>
+          <h3>Licensed Execution VWAP</h3>
+          <p>The Phase-2 unlock: a true VWAP of Web2 executed trades from licensed partners. Marked pending until data agreements are in place. This is where BD and fundraising effort goes — never into scrapers.</p>
+        </div>
+        <div class="cell" style="min-height:auto">
+          <div class="ticker">Settlement gate</div>
+          <h3>Earned, not asserted</h3>
+          <p>Flip a series to settlement-grade only when executed depth, provider diversity, and the published manipulation-cost coverage ratio all clear threshold — i.e. moving the index costs far more than the open interest it settles.</p>
+        </div>
+      </div>
+      <div style="height:18px"></div>
+      <div class="pipeline" style="grid-template-columns:repeat(4,1fr)">
+        <div class="step"><div class="n">Phase 0</div><b>Daily reference</b><p>Publish the four components. Build a verifiable, public track record. settlement_ready: false.</p></div>
+        <div class="step"><div class="n">Phase 1</div><b>Coverage &amp; rights</b><p>Widen sources, clear data rights, harden governance and independent validation.</p></div>
+        <div class="step"><div class="n">Phase 2</div><b>Licensed execution</b><p>Stand up SO-H100-XLV from partner executed data and/or deeper on-chain volume.</p></div>
+        <div class="step"><div class="n">Phase 3</div><b>Settlement-grade</b><p>Per-bucket settlement only once depth and manipulation-cost gates pass.</p></div>
+      </div>
+      <div style="height:18px"></div>
+      <div class="greenline">
+        <b>The honest position:</b> we do not need Web2 executed data to launch. We need breadth, rigor, honest labeling, and governance now — and we earn settlement, and the deeper executed layer, on top of a track record nobody can dispute.
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    Silicon Oracle · proposed VWAP methodology v0.4 · v0.1 component stack unchanged · §18 next steps added · demo numbers only · no live market data
+  </footer>
+</div>
+</body>
+</html>
